@@ -128,159 +128,53 @@ class _NotesCanvasState extends State<NotesCanvas> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Toolbar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFD6E0F8), // Light background panel from design doc
-            border: Border(
-              bottom: BorderSide(color: Colors.grey.shade300),
+        // Simple toolbar like dental canvas
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildColorButton(Colors.black),
+            _buildColorButton(const Color(0xFF3164DE)),
+            _buildColorButton(const Color(0xFF19A14E)),
+            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: strokes.isEmpty ? null : _undo,
+              tooltip: 'Undo',
             ),
-          ),
-          child: Row(
-            children: [
-              const Text(
-                'Prescription / Clinical Notes',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF393C4D), // Text primary from design doc
-                ),
-              ),
-              const Spacer(),
-              // Color picker
-              _buildColorButton(Colors.black),
-              const SizedBox(width: 8),
-              _buildColorButton(const Color(0xFF3164DE)), // Primary blue
-              const SizedBox(width: 8),
-              _buildColorButton(const Color(0xFF19A14E)), // Success green
-              const SizedBox(width: 16),
-              // Undo button
-              IconButton(
-                icon: const Icon(Icons.undo),
-                onPressed: strokes.isEmpty ? null : _undo,
-                tooltip: 'Undo',
-                color: const Color(0xFF3164DE),
-              ),
-              // Clear button
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: strokes.isEmpty ? null : _clear,
-                tooltip: 'Clear All',
-                color: const Color(0xFFEF6161),
-              ),
-              // Collapse button (optional)
-              if (widget.showCollapseButton && widget.onToggleCollapse != null)
-                IconButton(
-                  icon: const Icon(Icons.expand_more),
-                  onPressed: widget.onToggleCollapse,
-                  tooltip: 'Collapse',
-                  color: const Color(0xFF3164DE),
-                ),
-            ],
-          ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: strokes.isEmpty ? null : _clear,
+              tooltip: 'Clear',
+            ),
+          ],
         ),
-        // Prescription Header (non-drawable area)
-        _buildPrescriptionHeader(),
-        // Canvas area with lined paper
+        // Canvas - same structure as dental canvas
         Expanded(
-          child: Container(
-            color: Colors.white,
-            child: GestureDetector(
-              onPanStart: _onPanStart,
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-              behavior: HitTestBehavior.opaque,
-              child: Stack(
-                children: [
-                  // Background with ruled lines (always visible)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: RuledLinesPainter(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: _onPanStart,
+                onPanUpdate: _onPanUpdate,
+                onPanEnd: _onPanEnd,
+                child: Stack(
+                  children: [
+                    // Prescription background (header + lines)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: PrescriptionBackgroundPainter(),
+                      ),
                     ),
-                  ),
-                  // Strokes layer
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: NotesPainter(strokes: strokes),
+                    // Strokes
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: NotesPainter(strokes: strokes),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrescriptionHeader() {
-    final today = DateTime.now();
-    final dateStr = '${today.day}/${today.month}/${today.year}';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300, width: 1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Clinic name placeholder
-          const Text(
-            '[DENTAL CLINIC NAME]',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF3164DE),
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Header columns
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: _buildHeaderColumn('Date', dateStr),
-              ),
-              Expanded(
-                flex: 3,
-                child: _buildHeaderColumn('Treatment', '____________'),
-              ),
-              Expanded(
-                flex: 2,
-                child: _buildHeaderColumn('Follow-up Date', '__/__/____'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderColumn(String label, String placeholder) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF8592AD),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          placeholder,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF393C4D),
-            fontWeight: FontWeight.w500,
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -311,14 +205,54 @@ class _NotesCanvasState extends State<NotesCanvas> {
   }
 }
 
-/// Painter for ruled lines background (always visible)
-class RuledLinesPainter extends CustomPainter {
+/// Painter for prescription background (header + ruled lines)
+class PrescriptionBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.left,
+    );
+
+    // Draw prescription header
+    const headerHeight = 80.0;
+
+    // Clinic name
+    textPainter.text = const TextSpan(
+      text: '[DENTAL CLINIC NAME]',
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF3164DE),
+      ),
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, const Offset(16, 8));
+
+    // Date
+    final today = DateTime.now();
+    final dateStr = '${today.day}/${today.month}/${today.year}';
+    textPainter.text = TextSpan(
+      text: 'Date: $dateStr',
+      style: const TextStyle(fontSize: 12, color: Color(0xFF393C4D)),
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, const Offset(16, 35));
+
+    // Draw separator line after header
+    final separatorPaint = Paint()
+      ..color = const Color(0xFFE0E0E0)
+      ..strokeWidth = 1.0;
+    canvas.drawLine(
+      const Offset(0, headerHeight),
+      Offset(size.width, headerHeight),
+      separatorPaint,
+    );
+
+    // Draw ruled lines below header
     final linePaint = Paint()
       ..color = const Color(0xFFE0E0E0)
-      ..strokeWidth = 0.5
-      ..style = PaintingStyle.stroke;
+      ..strokeWidth = 0.5;
 
     const double lineSpacing = 30.0;
     const double leftMargin = 40.0;
@@ -326,17 +260,16 @@ class RuledLinesPainter extends CustomPainter {
     // Draw margin line
     final marginPaint = Paint()
       ..color = const Color(0xFFEF6161).withAlpha(76)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+      ..strokeWidth = 1.0;
 
     canvas.drawLine(
-      const Offset(leftMargin, 0),
+      const Offset(leftMargin, headerHeight),
       Offset(leftMargin, size.height),
       marginPaint,
     );
 
     // Draw horizontal lines
-    for (double y = lineSpacing; y < size.height; y += lineSpacing) {
+    for (double y = headerHeight + lineSpacing; y < size.height; y += lineSpacing) {
       canvas.drawLine(
         Offset(0, y),
         Offset(size.width, y),
@@ -346,7 +279,7 @@ class RuledLinesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(RuledLinesPainter oldDelegate) => false;
+  bool shouldRepaint(PrescriptionBackgroundPainter oldDelegate) => false;
 }
 
 /// Custom painter for rendering note strokes only
