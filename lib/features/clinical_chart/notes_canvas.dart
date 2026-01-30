@@ -138,7 +138,7 @@ class _NotesCanvasState extends State<NotesCanvas> {
           child: Row(
             children: [
               const Text(
-                'Clinical Notes',
+                'Prescription / Clinical Notes',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -170,24 +170,106 @@ class _NotesCanvasState extends State<NotesCanvas> {
             ],
           ),
         ),
-        // Canvas area
+        // Canvas area with prescription header and lined paper
         Expanded(
           child: Container(
             color: Colors.white,
-            child: GestureDetector(
-              onPanStart: _onPanStart,
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-              child: CustomPaint(
-                painter: NotesPainter(
-                  strokes: strokes,
-                  currentStroke: currentStroke,
-                  currentColor: selectedColor,
-                  currentWidth: strokeWidth,
+            child: Column(
+              children: [
+                // Prescription Header (non-drawable area)
+                _buildPrescriptionHeader(),
+                // Drawing area with lines
+                Expanded(
+                  child: GestureDetector(
+                    onPanStart: _onPanStart,
+                    onPanUpdate: _onPanUpdate,
+                    onPanEnd: _onPanEnd,
+                    child: CustomPaint(
+                      painter: NotesPainter(
+                        strokes: strokes,
+                        currentStroke: currentStroke,
+                        currentColor: selectedColor,
+                        currentWidth: strokeWidth,
+                      ),
+                      size: Size.infinite,
+                    ),
+                  ),
                 ),
-                size: Size.infinite,
-              ),
+              ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrescriptionHeader() {
+    final today = DateTime.now();
+    final dateStr = '${today.day}/${today.month}/${today.year}';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade300, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Clinic name placeholder
+          const Text(
+            '[DENTAL CLINIC NAME]',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3164DE),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Header columns
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildHeaderColumn('Date', dateStr),
+              ),
+              Expanded(
+                flex: 3,
+                child: _buildHeaderColumn('Treatment', '____________'),
+              ),
+              Expanded(
+                flex: 2,
+                child: _buildHeaderColumn('Follow-up Date', '__/__/____'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderColumn(String label, String placeholder) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF8592AD),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          placeholder,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF393C4D),
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -234,6 +316,9 @@ class NotesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw horizontal lines (ruled paper effect)
+    _drawRuledLines(canvas, size);
+
     // Draw completed strokes
     for (final stroke in strokes) {
       final paint = Paint()
@@ -260,6 +345,38 @@ class NotesPainter extends CustomPainter {
       for (int i = 0; i < currentStroke.length - 1; i++) {
         canvas.drawLine(currentStroke[i], currentStroke[i + 1], paint);
       }
+    }
+  }
+
+  void _drawRuledLines(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = const Color(0xFFE0E0E0) // Light gray lines
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+
+    // Line spacing: 30 pixels between lines (like ruled paper)
+    const double lineSpacing = 30.0;
+    const double leftMargin = 40.0; // Left margin for binding/margin line
+
+    // Draw margin line
+    final marginPaint = Paint()
+      ..color = const Color(0xFFEF6161).withAlpha(76) // Light red margin (0.3 * 255 ≈ 76)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(
+      const Offset(leftMargin, 0),
+      Offset(leftMargin, size.height),
+      marginPaint,
+    );
+
+    // Draw horizontal lines
+    for (double y = lineSpacing; y < size.height; y += lineSpacing) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        linePaint,
+      );
     }
   }
 
