@@ -19,6 +19,8 @@ class ClinicalDashboard extends StatefulWidget {
 
 class _ClinicalDashboardState extends State<ClinicalDashboard> {
   bool _showFullInfo = true;
+  bool _showTeethChart = true;
+  bool _showPrescription = true;
   final AppDatabase _database = AppDatabase();
   late Patient _currentPatient;
 
@@ -71,17 +73,8 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
       ),
       body: Column(
         children: [
-          // Patient Summary Card
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            child: _showFullInfo ? _buildFullPatientInfo() : _buildCompactInfo(),
-          ),
-          const Divider(height: 1),
-          // Teeth Chart Canvas (fixed height)
-          SizedBox(
-            height: 400,
-            child: const CanvasScreen(),
-          ),
+          // Patient Summary Card (compact only to save space)
+          _buildCompactInfo(),
           const Divider(height: 1),
           // Clinical Notes Canvas
           Expanded(
@@ -298,6 +291,38 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
               color: color ?? Colors.blue,
               fontWeight: FontWeight.w500,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, bool isExpanded, VoidCallback onToggle) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD6E0F8),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade300),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF393C4D),
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+            onPressed: onToggle,
+            tooltip: isExpanded ? 'Collapse' : 'Expand',
+            color: const Color(0xFF3164DE),
           ),
         ],
       ),
