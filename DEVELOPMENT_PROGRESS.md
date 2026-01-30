@@ -1,7 +1,7 @@
 # Dental Chart Pro - Development Progress
 
 **Last Updated:** 2026-01-30
-**Current Status:** Patient Intake, Medical Records & Clinical Notes Complete ✅
+**Current Status:** Tabbed Clinical Dashboard with Prescription Canvas Complete ✅
 
 ---
 
@@ -125,23 +125,33 @@ lib/
   - Handwritten clinical notes canvas below
   - Registration date display
 
-#### **1.5 Clinical Notes (Handwritten)**
+#### **1.5 Clinical Dashboard with Tabs**
+- **Tabbed Interface:**
+  - Tab 1: Dental Chart (existing frozen canvas)
+  - Tab 2: Prescription / Clinical Notes
+  - Compact patient info header (name, age, sex, allergy warning)
+  - Smooth tab switching
+
+#### **1.6 Prescription Canvas (Handwritten)**
 - **Canvas-Based Notes:**
-  - Separate drawing canvas for clinical notes
+  - Optimized drawing matching dental canvas performance
   - Pen color selection (Black, Blue, Green)
   - Undo and Clear all functionality
   - Real-time auto-save to database
+  - Ruled lines background (notebook style)
+  - Prescription header with clinic name and date
 
 - **Storage:**
   - Notes stored as JSON in database
   - Strokes include: points (x,y), color, width
   - Persisted per patient
 
-- **Features:**
-  - Clean toolbar with color picker
-  - Smooth drawing experience
-  - Persistent across sessions
-  - Follows design guidelines (colors: #3164DE, #19A14E)
+- **Technical Implementation:**
+  - Same structure as dental canvas (simple, fast)
+  - Single PrescriptionBackgroundPainter for header + lines
+  - Direct GestureDetector with LayoutBuilder
+  - Minimal widget rebuilds for smooth drawing
+  - Stack pattern: background + strokes layers
 
 ---
 
@@ -228,18 +238,22 @@ flutter_lints: ^6.0.0         # Linting rules
 ### What Works
 ✅ Patient registration with comprehensive medical fields
 ✅ Patient list with CRUD operations
-✅ Clinical dashboard with expandable patient info
+✅ Tabbed clinical dashboard (Dental Chart + Prescription)
 ✅ Dental canvas with drawing and PDF export
+✅ Prescription canvas with smooth drawing performance
+✅ Ruled lines and prescription header background
 ✅ Handwritten clinical notes with auto-save
 ✅ SQLite persistence with automatic migration
 ✅ Offline-first architecture
 ✅ Professional UI with color-coded medical sections
 
-### What's Missing
-⏳ Save/load teeth chart strokes per patient
-⏳ Enhanced PDF reports with patient details and clinical notes
-⏳ Edit patient information
-⏳ Search patients functionality (UI)
+### What's Next (Priority Order)
+1. **PDF Export for Prescription** - Add prescription canvas to PDF with ruled lines and header
+2. **UI Polish (Apple-style)** - Implement design document styling (shadows, rounded corners, smooth animations)
+3. **Save/load teeth chart strokes per patient** - Persist dental chart drawings
+4. **Enhanced PDF reports** - Combine patient details, dental chart, and prescription in one PDF
+5. **Edit patient information** - Allow updating patient medical records
+6. **Search patients functionality (UI)** - Add search bar to patient list
 
 ---
 
@@ -347,34 +361,144 @@ Future<void> saveToDatabase()
 
 ---
 
+## 📋 Immediate Next Phase: Prescription PDF Export
+
+### Plan: Add PDF Export for Prescription Canvas
+
+Following the exact pattern from `lib/core/canvas_screen.dart`:
+
+**Current Dental Canvas PDF Logic:**
+```dart
+Future<void> exportToPdf() async {
+  final doc = pw.Document();
+  final svgString = await rootBundle.loadString("assets/teeth_chart.svg");
+
+  doc.addPage(
+    pw.Page(
+      pageFormat: const PdfPageFormat(1000, 1000),
+      build: (context) {
+        return pw.Stack(
+          children: [
+            // Background: SVG teeth chart
+            pw.SvgImage(svg: svgString),
+            // Strokes: Custom painted with coordinate transformation
+            pw.CustomPaint(painter: (canvas, size) {
+              // Y-axis inversion for PDF coordinates
+              for (final stroke in strokes) {
+                for (int i = 0; i < stroke.points.length - 1; i++) {
+                  final y1 = logicalHeight - p1.dy;
+                  canvas.lineTo(p2.dx, y2);
+                }
+              }
+            }),
+          ],
+        );
+      },
+    ),
+  );
+}
+```
+
+**Prescription Canvas PDF (To Implement):**
+```dart
+Future<void> exportPrescriptionToPdf() async {
+  final doc = pw.Document();
+
+  doc.addPage(
+    pw.Page(
+      pageFormat: PdfPageFormat.a4, // Standard prescription size
+      build: (context) {
+        return pw.Stack(
+          children: [
+            // Background: Prescription header + ruled lines
+            pw.CustomPaint(
+              painter: (canvas, size) {
+                // Draw clinic name, date, ruled lines
+              }
+            ),
+            // Strokes: Patient handwriting
+            pw.CustomPaint(
+              painter: (canvas, size) {
+                // Draw strokes with coordinate mapping
+              }
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+```
+
+**Implementation Steps:**
+1. Add PDF export button to prescription toolbar
+2. Create `exportPrescriptionToPdf()` method in NotesCanvas
+3. Draw prescription header in PDF (clinic name, date, lines)
+4. Map prescription strokes to PDF coordinates (handle scaling)
+5. Test PDF generation and printing
+
+---
+
 ## 🔮 Next Steps (Planned)
 
-### Phase 2: Canvas Persistence
-1. Create strokes file storage service
-2. Serialize/deserialize strokes to JSON
-3. Link strokes to patient ID
+### Phase 2: Prescription PDF Export (Current Priority)
+1. ✅ Prescription canvas with smooth drawing
+2. ⏳ Add PDF export button to prescription toolbar
+3. ⏳ Implement `exportPrescriptionToPdf()` method
+4. ⏳ Draw prescription header in PDF (clinic name, date, ruled lines)
+5. ⏳ Map strokes to PDF coordinates (A4 page format)
+6. ⏳ Test PDF generation and printing
+
+### Phase 3: UI Polish (Apple-style Design)
+**Based on design document requirements:**
+1. **Shadows & Depth**
+   - Add subtle shadows to cards and panels
+   - Elevation for floating elements
+   - Depth hierarchy for visual layering
+
+2. **Rounded Corners**
+   - Consistent border radius (8-12px)
+   - Smooth corners on all UI elements
+   - Modern, soft appearance
+
+3. **Smooth Animations**
+   - Fade transitions between screens
+   - Slide animations for drawers/panels
+   - Micro-interactions on buttons
+   - Smooth tab switching
+
+4. **Color Refinement**
+   - Consistent use of design doc colors
+   - Subtle gradients where appropriate
+   - Better contrast ratios
+   - Refined hover/active states
+
+5. **Typography**
+   - Consistent font weights and sizes
+   - Better text hierarchy
+   - Improved readability
+   - Professional medical aesthetic
+
+### Phase 4: Canvas Persistence
+1. Save dental chart strokes per patient
+2. Serialize/deserialize strokes to JSON or binary
+3. Link strokes to patient ID in database
 4. Load strokes when opening clinical dashboard
 5. Auto-save on canvas changes
 
-### Phase 3: Enhanced PDF Reports
-1. Add patient details header to PDF
-2. Include medical information summary
-3. Professional PDF layout
-4. Patient-specific filename
-5. Date and timestamp
+### Phase 5: Enhanced PDF Reports
+1. Combine dental chart + prescription in single PDF
+2. Add patient details header to PDF
+3. Include medical information summary
+4. Professional multi-page layout
+5. Patient-specific filename with date
 
-### Phase 4: Clinical Notes
-1. Add notes text field to clinical dashboard
-2. Save notes per patient in database
-3. Display notes in collapsed view
-4. Include notes in PDF export
-
-### Phase 5: Advanced Features
-1. Patient search functionality
+### Phase 6: Advanced Features
+1. Patient search functionality (UI + backend)
 2. Edit patient information
 3. Chart history/versions
 4. Export/import patient data
-5. Backup and restore
+5. Backup and restore database
 
 ---
 
