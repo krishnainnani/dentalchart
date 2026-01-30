@@ -19,6 +19,9 @@ class Patients extends Table {
   TextColumn get habits => text()();
   BoolColumn get isPregnant => boolean().named('is_pregnant')();
 
+  // Clinical Notes (handwritten notes as JSON)
+  TextColumn get clinicalNotes => text().named('clinical_notes')();
+
   DateTimeColumn get createdAt => dateTime().named('created_at')();
 }
 
@@ -27,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -94,6 +97,7 @@ class AppDatabase extends _$AppDatabase {
       allergies: Value(patient.allergies),
       habits: Value(patient.habits),
       isPregnant: Value(patient.isPregnant),
+      clinicalNotes: Value(patient.clinicalNotes),
       createdAt: Value(patient.createdAt),
     );
   }

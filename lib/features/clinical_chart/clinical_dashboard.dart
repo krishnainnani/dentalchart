@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../features/patient_intake/patient_model.dart';
 import '../../core/canvas_screen.dart';
+import '../../data/database.dart';
+import 'notes_canvas.dart';
 
 class ClinicalDashboard extends StatefulWidget {
   final Patient patient;
@@ -17,6 +19,36 @@ class ClinicalDashboard extends StatefulWidget {
 
 class _ClinicalDashboardState extends State<ClinicalDashboard> {
   bool _showFullInfo = true;
+  final AppDatabase _database = AppDatabase();
+  late Patient _currentPatient;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPatient = widget.patient;
+  }
+
+  @override
+  void dispose() {
+    _database.close();
+    super.dispose();
+  }
+
+  Future<void> _saveNotes(String notesJson) async {
+    try {
+      final updatedPatient = _currentPatient.copyWith(clinicalNotes: notesJson);
+      await _database.updatePatient(updatedPatient);
+      setState(() {
+        _currentPatient = updatedPatient;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving notes: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +77,18 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
             child: _showFullInfo ? _buildFullPatientInfo() : _buildCompactInfo(),
           ),
           const Divider(height: 1),
-          // Canvas Area
-          Expanded(
+          // Teeth Chart Canvas (fixed height)
+          SizedBox(
+            height: 400,
             child: const CanvasScreen(),
+          ),
+          const Divider(height: 1),
+          // Clinical Notes Canvas
+          Expanded(
+            child: NotesCanvas(
+              initialNotes: _currentPatient.clinicalNotes,
+              onNotesChanged: _saveNotes,
+            ),
           ),
         ],
       ),
@@ -66,7 +107,7 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
             foregroundColor: Colors.white,
             radius: 20,
             child: Text(
-              widget.patient.name[0].toUpperCase(),
+              _currentPatient.name[0].toUpperCase(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
@@ -76,17 +117,17 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.patient.name,
+                  _currentPatient.name,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '${widget.patient.age}y • ${widget.patient.sex}',
+                  '${_currentPatient.age}y • ${_currentPatient.sex}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
               ],
             ),
           ),
-          if (widget.patient.allergies.isNotEmpty)
+          if (_currentPatient.allergies.isNotEmpty)
             const Chip(
               label: Text('⚠ Allergies', style: TextStyle(fontSize: 11)),
               backgroundColor: Colors.red,
@@ -115,7 +156,7 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
                   foregroundColor: Colors.white,
                   radius: 28,
                   child: Text(
-                    widget.patient.name[0].toUpperCase(),
+                    _currentPatient.name[0].toUpperCase(),
                     style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -125,16 +166,16 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.patient.name,
+                        _currentPatient.name,
                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          _buildInfoChip('${widget.patient.age} years', Icons.calendar_today),
+                          _buildInfoChip('${_currentPatient.age} years', Icons.calendar_today),
                           const SizedBox(width: 8),
-                          _buildInfoChip(widget.patient.sex, Icons.wc),
-                          if (widget.patient.isPregnant) ...[
+                          _buildInfoChip(_currentPatient.sex, Icons.wc),
+                          if (_currentPatient.isPregnant) ...[
                             const SizedBox(width: 8),
                             _buildInfoChip('Pregnant', Icons.pregnant_woman, Colors.pink),
                           ],
@@ -153,7 +194,7 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
 
             const SizedBox(height: 8),
             Text(
-              'Registered: ${DateFormat('MMMM d, yyyy').format(widget.patient.createdAt)}',
+              'Registered: ${DateFormat('MMMM d, yyyy').format(_currentPatient.createdAt)}',
               style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
             ),
           ],
@@ -165,34 +206,34 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> {
   Widget _buildMedicalSection() {
     return Column(
       children: [
-        if (widget.patient.allergies.isNotEmpty)
+        if (_currentPatient.allergies.isNotEmpty)
           _buildInfoCard(
             'Allergies',
-            widget.patient.allergies,
+            _currentPatient.allergies,
             Icons.warning_amber,
             Colors.red.shade50,
             Colors.red,
           ),
-        if (widget.patient.currentMedications.isNotEmpty)
+        if (_currentPatient.currentMedications.isNotEmpty)
           _buildInfoCard(
             'Current Medications',
-            widget.patient.currentMedications,
+            _currentPatient.currentMedications,
             Icons.medication,
             Colors.green.shade50,
             Colors.green,
           ),
-        if (widget.patient.medicalHistory.isNotEmpty)
+        if (_currentPatient.medicalHistory.isNotEmpty)
           _buildInfoCard(
             'Medical History',
-            widget.patient.medicalHistory,
+            _currentPatient.medicalHistory,
             Icons.medical_services,
             Colors.blue.shade50,
             Colors.blue,
           ),
-        if (widget.patient.habits.isNotEmpty)
+        if (_currentPatient.habits.isNotEmpty)
           _buildInfoCard(
             'Habits & Lifestyle',
-            widget.patient.habits,
+            _currentPatient.habits,
             Icons.local_cafe,
             Colors.orange.shade50,
             Colors.orange,

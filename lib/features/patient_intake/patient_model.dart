@@ -11,6 +11,9 @@ class Patient {
   final String habits;
   final bool isPregnant;
 
+  // Clinical Notes (handwritten notes stored as JSON)
+  final String clinicalNotes;
+
   final DateTime createdAt;
 
   Patient({
@@ -23,6 +26,7 @@ class Patient {
     this.allergies = '',
     this.habits = '',
     this.isPregnant = false,
+    this.clinicalNotes = '',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -36,6 +40,7 @@ class Patient {
     String? allergies,
     String? habits,
     bool? isPregnant,
+    String? clinicalNotes,
     DateTime? createdAt,
   }) {
     return Patient(
@@ -48,6 +53,7 @@ class Patient {
       allergies: allergies ?? this.allergies,
       habits: habits ?? this.habits,
       isPregnant: isPregnant ?? this.isPregnant,
+      clinicalNotes: clinicalNotes ?? this.clinicalNotes,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -63,6 +69,7 @@ class Patient {
       'allergies': allergies,
       'habits': habits,
       'is_pregnant': isPregnant ? 1 : 0,
+      'clinical_notes': clinicalNotes,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -78,6 +85,7 @@ class Patient {
       allergies: map['allergies'] as String? ?? '',
       habits: map['habits'] as String? ?? '',
       isPregnant: (map['is_pregnant'] as int?) == 1,
+      clinicalNotes: map['clinical_notes'] as String? ?? '',
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }

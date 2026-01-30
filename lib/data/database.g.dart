@@ -112,6 +112,17 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
       'CHECK ("is_pregnant" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _clinicalNotesMeta = const VerificationMeta(
+    'clinicalNotes',
+  );
+  @override
+  late final GeneratedColumn<String> clinicalNotes = GeneratedColumn<String>(
+    'clinical_notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -134,6 +145,7 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
     allergies,
     habits,
     isPregnant,
+    clinicalNotes,
     createdAt,
   ];
   @override
@@ -221,6 +233,17 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
     } else if (isInserting) {
       context.missing(_isPregnantMeta);
     }
+    if (data.containsKey('clinical_notes')) {
+      context.handle(
+        _clinicalNotesMeta,
+        clinicalNotes.isAcceptableOrUnknown(
+          data['clinical_notes']!,
+          _clinicalNotesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_clinicalNotesMeta);
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -274,6 +297,10 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_pregnant'],
       )!,
+      clinicalNotes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}clinical_notes'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -297,6 +324,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
   final Value<String> allergies;
   final Value<String> habits;
   final Value<bool> isPregnant;
+  final Value<String> clinicalNotes;
   final Value<DateTime> createdAt;
   const PatientsCompanion({
     this.id = const Value.absent(),
@@ -308,6 +336,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     this.allergies = const Value.absent(),
     this.habits = const Value.absent(),
     this.isPregnant = const Value.absent(),
+    this.clinicalNotes = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   PatientsCompanion.insert({
@@ -320,6 +349,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     required String allergies,
     required String habits,
     required bool isPregnant,
+    required String clinicalNotes,
     required DateTime createdAt,
   }) : name = Value(name),
        age = Value(age),
@@ -329,6 +359,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
        allergies = Value(allergies),
        habits = Value(habits),
        isPregnant = Value(isPregnant),
+       clinicalNotes = Value(clinicalNotes),
        createdAt = Value(createdAt);
   static Insertable<Patient> custom({
     Expression<int>? id,
@@ -340,6 +371,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     Expression<String>? allergies,
     Expression<String>? habits,
     Expression<bool>? isPregnant,
+    Expression<String>? clinicalNotes,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -352,6 +384,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
       if (allergies != null) 'allergies': allergies,
       if (habits != null) 'habits': habits,
       if (isPregnant != null) 'is_pregnant': isPregnant,
+      if (clinicalNotes != null) 'clinical_notes': clinicalNotes,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -366,6 +399,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     Value<String>? allergies,
     Value<String>? habits,
     Value<bool>? isPregnant,
+    Value<String>? clinicalNotes,
     Value<DateTime>? createdAt,
   }) {
     return PatientsCompanion(
@@ -378,6 +412,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
       allergies: allergies ?? this.allergies,
       habits: habits ?? this.habits,
       isPregnant: isPregnant ?? this.isPregnant,
+      clinicalNotes: clinicalNotes ?? this.clinicalNotes,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -412,6 +447,9 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     if (isPregnant.present) {
       map['is_pregnant'] = Variable<bool>(isPregnant.value);
     }
+    if (clinicalNotes.present) {
+      map['clinical_notes'] = Variable<String>(clinicalNotes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -430,6 +468,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
           ..write('allergies: $allergies, ')
           ..write('habits: $habits, ')
           ..write('isPregnant: $isPregnant, ')
+          ..write('clinicalNotes: $clinicalNotes, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -458,6 +497,7 @@ typedef $$PatientsTableCreateCompanionBuilder =
       required String allergies,
       required String habits,
       required bool isPregnant,
+      required String clinicalNotes,
       required DateTime createdAt,
     });
 typedef $$PatientsTableUpdateCompanionBuilder =
@@ -471,6 +511,7 @@ typedef $$PatientsTableUpdateCompanionBuilder =
       Value<String> allergies,
       Value<String> habits,
       Value<bool> isPregnant,
+      Value<String> clinicalNotes,
       Value<DateTime> createdAt,
     });
 
@@ -525,6 +566,11 @@ class $$PatientsTableFilterComposer
 
   ColumnFilters<bool> get isPregnant => $composableBuilder(
     column: $table.isPregnant,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clinicalNotes => $composableBuilder(
+    column: $table.clinicalNotes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -588,6 +634,11 @@ class $$PatientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get clinicalNotes => $composableBuilder(
+    column: $table.clinicalNotes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -636,6 +687,11 @@ class $$PatientsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get clinicalNotes => $composableBuilder(
+    column: $table.clinicalNotes,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -677,6 +733,7 @@ class $$PatientsTableTableManager
                 Value<String> allergies = const Value.absent(),
                 Value<String> habits = const Value.absent(),
                 Value<bool> isPregnant = const Value.absent(),
+                Value<String> clinicalNotes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => PatientsCompanion(
                 id: id,
@@ -688,6 +745,7 @@ class $$PatientsTableTableManager
                 allergies: allergies,
                 habits: habits,
                 isPregnant: isPregnant,
+                clinicalNotes: clinicalNotes,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -701,6 +759,7 @@ class $$PatientsTableTableManager
                 required String allergies,
                 required String habits,
                 required bool isPregnant,
+                required String clinicalNotes,
                 required DateTime createdAt,
               }) => PatientsCompanion.insert(
                 id: id,
@@ -712,6 +771,7 @@ class $$PatientsTableTableManager
                 allergies: allergies,
                 habits: habits,
                 isPregnant: isPregnant,
+                clinicalNotes: clinicalNotes,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
