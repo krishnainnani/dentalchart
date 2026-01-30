@@ -36,11 +36,15 @@ class NoteStroke {
 class NotesCanvas extends StatefulWidget {
   final String? initialNotes; // JSON string of strokes
   final Function(String) onNotesChanged; // Callback when notes change
+  final VoidCallback? onToggleCollapse; // Optional callback to collapse section
+  final bool showCollapseButton; // Whether to show collapse button
 
   const NotesCanvas({
     super.key,
     this.initialNotes,
     required this.onNotesChanged,
+    this.onToggleCollapse,
+    this.showCollapseButton = false,
   });
 
   @override
@@ -49,7 +53,7 @@ class NotesCanvas extends StatefulWidget {
 
 class _NotesCanvasState extends State<NotesCanvas> {
   List<NoteStroke> strokes = [];
-  List<Offset> currentStroke = [];
+  NoteStroke? currentStroke;
   Color selectedColor = Colors.black;
   double strokeWidth = 2.0;
 
@@ -81,26 +85,24 @@ class _NotesCanvasState extends State<NotesCanvas> {
 
   void _onPanStart(DragStartDetails details) {
     setState(() {
-      currentStroke = [details.localPosition];
+      currentStroke = NoteStroke(
+        points: [details.localPosition],
+        color: selectedColor,
+        width: strokeWidth,
+      );
+      strokes.add(currentStroke!);
     });
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     setState(() {
-      currentStroke.add(details.localPosition);
+      currentStroke?.points.add(details.localPosition);
     });
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (currentStroke.isNotEmpty) {
-      setState(() {
-        strokes.add(NoteStroke(
-          points: List.from(currentStroke),
-          color: selectedColor,
-          width: strokeWidth,
-        ));
-        currentStroke = [];
-      });
+    if (currentStroke != null) {
+      currentStroke = null;
       _saveNotes();
     }
   }
@@ -117,7 +119,7 @@ class _NotesCanvasState extends State<NotesCanvas> {
   void _clear() {
     setState(() {
       strokes.clear();
-      currentStroke = [];
+      currentStroke = null;
     });
     _saveNotes();
   }
@@ -167,6 +169,14 @@ class _NotesCanvasState extends State<NotesCanvas> {
                 tooltip: 'Clear All',
                 color: const Color(0xFFEF6161),
               ),
+              // Collapse button (optional)
+              if (widget.showCollapseButton && widget.onToggleCollapse != null)
+                IconButton(
+                  icon: const Icon(Icons.expand_more),
+                  onPressed: widget.onToggleCollapse,
+                  tooltip: 'Collapse',
+                  color: const Color(0xFF3164DE),
+                ),
             ],
           ),
         ),
@@ -192,12 +202,7 @@ class _NotesCanvasState extends State<NotesCanvas> {
                   // Strokes layer
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: NotesPainter(
-                        strokes: strokes,
-                        currentStroke: currentStroke,
-                        currentColor: selectedColor,
-                        currentWidth: strokeWidth,
-                      ),
+                      painter: NotesPainter(strokes: strokes),
                     ),
                   ),
                 ],
@@ -347,21 +352,15 @@ class RuledLinesPainter extends CustomPainter {
 /// Custom painter for rendering note strokes only
 class NotesPainter extends CustomPainter {
   final List<NoteStroke> strokes;
-  final List<Offset> currentStroke;
-  final Color currentColor;
-  final double currentWidth;
 
-  NotesPainter({
-    required this.strokes,
-    required this.currentStroke,
-    required this.currentColor,
-    required this.currentWidth,
-  });
+  NotesPainter({required this.strokes});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw completed strokes
+    // Draw all strokes (including current stroke if being drawn)
     for (final stroke in strokes) {
+      if (stroke.points.length < 2) continue;
+
       final paint = Paint()
         ..color = stroke.color
         ..strokeWidth = stroke.width
@@ -373,27 +372,10 @@ class NotesPainter extends CustomPainter {
         canvas.drawLine(stroke.points[i], stroke.points[i + 1], paint);
       }
     }
-
-    // Draw current stroke being drawn
-    if (currentStroke.length > 1) {
-      final paint = Paint()
-        ..color = currentColor
-        ..strokeWidth = currentWidth
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke;
-
-      for (int i = 0; i < currentStroke.length - 1; i++) {
-        canvas.drawLine(currentStroke[i], currentStroke[i + 1], paint);
-      }
-    }
   }
 
   @override
   bool shouldRepaint(NotesPainter oldDelegate) {
-    return oldDelegate.strokes != strokes ||
-        oldDelegate.currentStroke != currentStroke ||
-        oldDelegate.currentColor != currentColor ||
-        oldDelegate.currentWidth != currentWidth;
+    return oldDelegate.strokes != strokes;
   }
 }
