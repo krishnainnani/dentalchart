@@ -1,0 +1,83 @@
+# CodeRabbit Configuration for Dental Chart Pro
+# This configuration ensures CodeRabbit follows the project's design rules
+
+language: en-US
+early_access: false
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+chat:
+  auto_reply: true
+
+# Frozen Core Components - DO NOT SUGGEST MODIFICATIONS
+# These files contain critical coordinate system and PDF logic that must not be changed
+tone_instructions: |
+  CRITICAL RULES:
+  1. NEVER suggest modifications to lib/core/canvas_screen.dart (frozen component)
+  2. NEVER suggest changes to the 1000x1000 coordinate system
+  3. NEVER suggest changes to PDF coordinate transformation logic
+  4. NEVER suggest changes to database migration strategy without explicit approval
+  5. Red color (#EF6161) is reserved for canvas markings - never suggest red for UI elements
+
+  DESIGN GUIDELINES TO ENFORCE:
+  - Typography: Poppins font family only
+  - Primary Color: #3164DE, Secondary: #B1C5F6
+  - Background panels: #D6E0F8
+  - Text: Primary #393C4D, Secondary #8592AD
+  - Border radius: 10px
+  - Page padding: 24px
+  - Card padding: 16-20px
+  - No sidebar navigation, no dashboards, no analytics cards
+
+  FOCUS REVIEW ON:
+  - UI/UX improvements following DESIGN_DOCUMENT.md
+  - Code organization and feature-based architecture
+  - Material Design 3 best practices
+  - Accessibility (44px minimum tap targets)
+  - Performance optimizations (non-breaking)
+  - Documentation clarity
+
+# Path-specific instructions
+path_instructions:
+  - path: "lib/core/**"
+    instructions: |
+      FROZEN CORE - Do not suggest any modifications to these files.
+      These contain critical canvas and PDF logic that must remain unchanged.
+      Only review for security vulnerabilities or critical bugs.
+
+  - path: "lib/data/database.dart"
+    instructions: |
+      Database schema and migration logic. Be cautious with suggestions.
+      Never suggest schema changes without considering migration impact.
+      Current schema version is 2 - any changes require migration strategy.
+
+  - path: "lib/features/**"
+    instructions: |
+      Feature modules - UI/UX improvements are welcome.
+      Ensure changes follow DESIGN_DOCUMENT.md guidelines.
+      Focus on accessibility, usability, and visual hierarchy.
+
+  - path: "**.md"
+    instructions: |
+      Documentation files - suggest clarity improvements.
+      Keep DEVELOPMENT_PROGRESS.md updated with significant changes.
+
+# Files to ignore in reviews
+ignore:
+  - "**/*.g.dart"           # Generated Drift code
+  - "**/*.freezed.dart"     # Generated freezed code
+  - "**/*.config.dart"      # Generated config
+  - "**/build/**"           # Build artifacts
+  - "**/.dart_tool/**"      # Dart tools
+  - "**/assets/**"          # Static assets
+  - "pubspec.lock"          # Lock file
+  - ".gitignore"
+  - "analysis_options.yaml"
