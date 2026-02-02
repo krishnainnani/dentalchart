@@ -36,8 +36,8 @@ class NoteStroke {
 
 /// Handwritten notes canvas widget
 class NotesCanvas extends StatefulWidget {
-  // A4 proportions in points: 595 x 842
-  static const Size logicalSize = Size(595, 842);
+  // Same logical size as dental canvas: 1000 x 1000
+  static const Size logicalSize = Size(1000, 1000);
 
   final String? initialNotes; // JSON string of strokes
   final Function(String) onNotesChanged; // Callback when notes change
@@ -343,7 +343,7 @@ class NotesPainter extends CustomPainter {
 /// Builds prescription background (header + ruled lines) for PDF export
 pw.Widget buildPrescriptionPdfBackground() {
   return pw.CustomPaint(
-    size: const PdfPoint(595, 842), // A4 size
+    size: const PdfPoint(1000, 1000), // Same as dental canvas
     painter: (PdfGraphics canvas, PdfPoint size) {
       const headerHeight = 80.0;
       const lineSpacing = 30.0;

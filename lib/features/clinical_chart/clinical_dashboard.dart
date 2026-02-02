@@ -194,7 +194,7 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> with SingleTicker
       // PAGE 2: Prescription
       doc.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: const PdfPageFormat(1000, 1000),
           build: (context) {
             return pw.Stack(
               children: [
@@ -244,8 +244,8 @@ class _ClinicalDashboardState extends State<ClinicalDashboard> with SingleTicker
                           final p2 = stroke.points[i + 1];
 
                           // Y-axis inversion for PDF (PDF origin is bottom-left)
-                          final y1 = 842 - p1.dy; // A4 height: 842 points
-                          final y2 = 842 - p2.dy;
+                          final y1 = 1000 - p1.dy; // Same as dental canvas: 1000 points
+                          final y2 = 1000 - p2.dy;
 
                           canvas
                             ..moveTo(p1.dx, y1)
