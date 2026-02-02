@@ -14,6 +14,9 @@ class Patient {
   // Clinical Notes (handwritten notes stored as JSON)
   final String clinicalNotes;
 
+  // Dental Chart Strokes (stored as JSON)
+  final String dentalChartStrokes;
+
   final DateTime createdAt;
 
   Patient({
@@ -27,6 +30,7 @@ class Patient {
     this.habits = '',
     this.isPregnant = false,
     this.clinicalNotes = '',
+    this.dentalChartStrokes = '',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -41,6 +45,7 @@ class Patient {
     String? habits,
     bool? isPregnant,
     String? clinicalNotes,
+    String? dentalChartStrokes,
     DateTime? createdAt,
   }) {
     return Patient(
@@ -54,6 +59,7 @@ class Patient {
       habits: habits ?? this.habits,
       isPregnant: isPregnant ?? this.isPregnant,
       clinicalNotes: clinicalNotes ?? this.clinicalNotes,
+      dentalChartStrokes: dentalChartStrokes ?? this.dentalChartStrokes,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -70,6 +76,7 @@ class Patient {
       'habits': habits,
       'is_pregnant': isPregnant ? 1 : 0,
       'clinical_notes': clinicalNotes,
+      'dental_chart_strokes': dentalChartStrokes,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -86,6 +93,7 @@ class Patient {
       habits: map['habits'] as String? ?? '',
       isPregnant: (map['is_pregnant'] as int?) == 1,
       clinicalNotes: map['clinical_notes'] as String? ?? '',
+      dentalChartStrokes: map['dental_chart_strokes'] as String? ?? '',
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }

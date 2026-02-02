@@ -123,6 +123,17 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _dentalChartStrokesMeta =
+      const VerificationMeta('dentalChartStrokes');
+  @override
+  late final GeneratedColumn<String> dentalChartStrokes =
+      GeneratedColumn<String>(
+        'dental_chart_strokes',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -146,6 +157,7 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
     habits,
     isPregnant,
     clinicalNotes,
+    dentalChartStrokes,
     createdAt,
   ];
   @override
@@ -244,6 +256,17 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
     } else if (isInserting) {
       context.missing(_clinicalNotesMeta);
     }
+    if (data.containsKey('dental_chart_strokes')) {
+      context.handle(
+        _dentalChartStrokesMeta,
+        dentalChartStrokes.isAcceptableOrUnknown(
+          data['dental_chart_strokes']!,
+          _dentalChartStrokesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dentalChartStrokesMeta);
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -301,6 +324,10 @@ class $PatientsTable extends Patients with TableInfo<$PatientsTable, Patient> {
         DriftSqlType.string,
         data['${effectivePrefix}clinical_notes'],
       )!,
+      dentalChartStrokes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dental_chart_strokes'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -325,6 +352,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
   final Value<String> habits;
   final Value<bool> isPregnant;
   final Value<String> clinicalNotes;
+  final Value<String> dentalChartStrokes;
   final Value<DateTime> createdAt;
   const PatientsCompanion({
     this.id = const Value.absent(),
@@ -337,6 +365,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     this.habits = const Value.absent(),
     this.isPregnant = const Value.absent(),
     this.clinicalNotes = const Value.absent(),
+    this.dentalChartStrokes = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   PatientsCompanion.insert({
@@ -350,6 +379,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     required String habits,
     required bool isPregnant,
     required String clinicalNotes,
+    required String dentalChartStrokes,
     required DateTime createdAt,
   }) : name = Value(name),
        age = Value(age),
@@ -360,6 +390,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
        habits = Value(habits),
        isPregnant = Value(isPregnant),
        clinicalNotes = Value(clinicalNotes),
+       dentalChartStrokes = Value(dentalChartStrokes),
        createdAt = Value(createdAt);
   static Insertable<Patient> custom({
     Expression<int>? id,
@@ -372,6 +403,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     Expression<String>? habits,
     Expression<bool>? isPregnant,
     Expression<String>? clinicalNotes,
+    Expression<String>? dentalChartStrokes,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -385,6 +417,8 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
       if (habits != null) 'habits': habits,
       if (isPregnant != null) 'is_pregnant': isPregnant,
       if (clinicalNotes != null) 'clinical_notes': clinicalNotes,
+      if (dentalChartStrokes != null)
+        'dental_chart_strokes': dentalChartStrokes,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -400,6 +434,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     Value<String>? habits,
     Value<bool>? isPregnant,
     Value<String>? clinicalNotes,
+    Value<String>? dentalChartStrokes,
     Value<DateTime>? createdAt,
   }) {
     return PatientsCompanion(
@@ -413,6 +448,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
       habits: habits ?? this.habits,
       isPregnant: isPregnant ?? this.isPregnant,
       clinicalNotes: clinicalNotes ?? this.clinicalNotes,
+      dentalChartStrokes: dentalChartStrokes ?? this.dentalChartStrokes,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -450,6 +486,9 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
     if (clinicalNotes.present) {
       map['clinical_notes'] = Variable<String>(clinicalNotes.value);
     }
+    if (dentalChartStrokes.present) {
+      map['dental_chart_strokes'] = Variable<String>(dentalChartStrokes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -469,6 +508,7 @@ class PatientsCompanion extends UpdateCompanion<Patient> {
           ..write('habits: $habits, ')
           ..write('isPregnant: $isPregnant, ')
           ..write('clinicalNotes: $clinicalNotes, ')
+          ..write('dentalChartStrokes: $dentalChartStrokes, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -498,6 +538,7 @@ typedef $$PatientsTableCreateCompanionBuilder =
       required String habits,
       required bool isPregnant,
       required String clinicalNotes,
+      required String dentalChartStrokes,
       required DateTime createdAt,
     });
 typedef $$PatientsTableUpdateCompanionBuilder =
@@ -512,6 +553,7 @@ typedef $$PatientsTableUpdateCompanionBuilder =
       Value<String> habits,
       Value<bool> isPregnant,
       Value<String> clinicalNotes,
+      Value<String> dentalChartStrokes,
       Value<DateTime> createdAt,
     });
 
@@ -571,6 +613,11 @@ class $$PatientsTableFilterComposer
 
   ColumnFilters<String> get clinicalNotes => $composableBuilder(
     column: $table.clinicalNotes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dentalChartStrokes => $composableBuilder(
+    column: $table.dentalChartStrokes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -639,6 +686,11 @@ class $$PatientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get dentalChartStrokes => $composableBuilder(
+    column: $table.dentalChartStrokes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -692,6 +744,11 @@ class $$PatientsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get dentalChartStrokes => $composableBuilder(
+    column: $table.dentalChartStrokes,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -734,6 +791,7 @@ class $$PatientsTableTableManager
                 Value<String> habits = const Value.absent(),
                 Value<bool> isPregnant = const Value.absent(),
                 Value<String> clinicalNotes = const Value.absent(),
+                Value<String> dentalChartStrokes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => PatientsCompanion(
                 id: id,
@@ -746,6 +804,7 @@ class $$PatientsTableTableManager
                 habits: habits,
                 isPregnant: isPregnant,
                 clinicalNotes: clinicalNotes,
+                dentalChartStrokes: dentalChartStrokes,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -760,6 +819,7 @@ class $$PatientsTableTableManager
                 required String habits,
                 required bool isPregnant,
                 required String clinicalNotes,
+                required String dentalChartStrokes,
                 required DateTime createdAt,
               }) => PatientsCompanion.insert(
                 id: id,
@@ -772,6 +832,7 @@ class $$PatientsTableTableManager
                 habits: habits,
                 isPregnant: isPregnant,
                 clinicalNotes: clinicalNotes,
+                dentalChartStrokes: dentalChartStrokes,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

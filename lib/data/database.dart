@@ -22,6 +22,9 @@ class Patients extends Table {
   // Clinical Notes (handwritten notes as JSON)
   TextColumn get clinicalNotes => text().named('clinical_notes')();
 
+  // Dental Chart Strokes (as JSON)
+  TextColumn get dentalChartStrokes => text().named('dental_chart_strokes')();
+
   DateTimeColumn get createdAt => dateTime().named('created_at')();
 }
 
@@ -30,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -98,6 +101,7 @@ class AppDatabase extends _$AppDatabase {
       habits: Value(patient.habits),
       isPregnant: Value(patient.isPregnant),
       clinicalNotes: Value(patient.clinicalNotes),
+      dentalChartStrokes: Value(patient.dentalChartStrokes),
       createdAt: Value(patient.createdAt),
     );
   }

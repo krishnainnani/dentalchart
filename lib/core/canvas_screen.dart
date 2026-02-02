@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pdf/pdf.dart';
@@ -6,7 +8,14 @@ import 'package:printing/printing.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class CanvasScreen extends StatefulWidget {
-  const CanvasScreen({super.key});
+  final String? initialStrokes;
+  final Function(String)? onStrokesChanged;
+
+  const CanvasScreen({
+    super.key,
+    this.initialStrokes,
+    this.onStrokesChanged,
+  });
 
   @override
   State<CanvasScreen> createState() => _CanvasScreenState();
@@ -18,6 +27,34 @@ class _CanvasScreenState extends State<CanvasScreen> {
   List<Stroke> strokes = [];
   Stroke? currentStroke;
   Color selectedColor = Colors.red;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialStrokes();
+  }
+
+  void _loadInitialStrokes() {
+    if (widget.initialStrokes != null && widget.initialStrokes!.isNotEmpty) {
+      try {
+        final List<dynamic> jsonList = json.decode(widget.initialStrokes!);
+        setState(() {
+          strokes = jsonList.map((e) => Stroke.fromJson(e)).toList();
+        });
+      } catch (e) {
+        // Invalid JSON, start with empty strokes
+        strokes = [];
+      }
+    }
+  }
+
+  void _saveStrokes() {
+    if (widget.onStrokesChanged != null) {
+      final jsonList = strokes.map((s) => s.toJson()).toList();
+      final jsonString = json.encode(jsonList);
+      widget.onStrokesChanged!(jsonString);
+    }
+  }
 
   // ================= Drawing =================
 
@@ -36,6 +73,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   void endStroke() {
     currentStroke = null;
+    _saveStrokes();
   }
 
   // ================= Controls =================
@@ -45,6 +83,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
       setState(() {
         strokes.removeLast();
       });
+      _saveStrokes();
     }
   }
 
@@ -52,6 +91,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
     setState(() {
       strokes.clear();
     });
+    _saveStrokes();
   }
 
   // ================= Coordinate Normalization =================
@@ -135,10 +175,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
         actions: [
           IconButton(icon: const Icon(Icons.undo), onPressed: undoStroke),
           IconButton(icon: const Icon(Icons.delete), onPressed: clearCanvas),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: exportToPdf,
-          ),
+          // PDF export button removed - now centralized in dashboard
         ],
       ),
       body: Column(
@@ -241,6 +278,25 @@ class Stroke {
     required this.width,
     required this.points,
   });
+
+  // JSON serialization for persistence
+  Map<String, dynamic> toJson() {
+    return {
+      'points': points.map((p) => {'dx': p.dx, 'dy': p.dy}).toList(),
+      'color': color.toARGB32(),
+      'width': width,
+    };
+  }
+
+  factory Stroke.fromJson(Map<String, dynamic> json) {
+    return Stroke(
+      points: (json['points'] as List)
+          .map((p) => Offset(p['dx'] as double, p['dy'] as double))
+          .toList(),
+      color: Color(json['color'] as int),
+      width: json['width'] as double,
+    );
+  }
 }
 
 // ================= Screen Painter =================

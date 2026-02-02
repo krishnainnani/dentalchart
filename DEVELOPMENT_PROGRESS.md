@@ -1,7 +1,7 @@
 # Dental Chart Pro - Development Progress
 
-**Last Updated:** 2026-01-30
-**Current Status:** Tabbed Clinical Dashboard with Prescription Canvas Complete ✅
+**Last Updated:** 2026-02-02
+**Current Status:** Canvas Persistence Complete + Tabbed Clinical Dashboard ✅
 
 ---
 
@@ -239,19 +239,22 @@ flutter_lints: ^6.0.0         # Linting rules
 ✅ Patient registration with comprehensive medical fields
 ✅ Patient list with CRUD operations
 ✅ Tabbed clinical dashboard (Dental Chart + Prescription)
-✅ Dental canvas with drawing and PDF export
+✅ **Dental canvas with stroke persistence** (NEW)
+✅ Dental canvas drawing and PDF export
 ✅ Prescription canvas with smooth drawing performance
+✅ **Both canvases persist across tab switches** (NEW)
+✅ **Both canvases persist across sessions** (NEW)
 ✅ Ruled lines and prescription header background
 ✅ Handwritten clinical notes with auto-save
-✅ SQLite persistence with automatic migration
+✅ SQLite persistence with automatic migration (schema v4)
 ✅ Offline-first architecture
 ✅ Professional UI with color-coded medical sections
 
 ### What's Next (Priority Order)
 1. **PDF Export for Prescription** - Add prescription canvas to PDF with ruled lines and header
 2. **UI Polish (Apple-style)** - Implement design document styling (shadows, rounded corners, smooth animations)
-3. **Save/load teeth chart strokes per patient** - Persist dental chart drawings
-4. **Enhanced PDF reports** - Combine patient details, dental chart, and prescription in one PDF
+3. **Enhanced PDF reports** - Combine patient details, dental chart, and prescription in one PDF
+4. **Database Singleton Pattern** - Resolve Drift warning about multiple instances (optional improvement)
 5. **Edit patient information** - Allow updating patient medical records
 6. **Search patients functionality (UI)** - Add search bar to patient list
 
@@ -264,10 +267,15 @@ flutter_lints: ^6.0.0         # Linting rules
 **Solution:** Migration strategy drops and recreates table on schema change
 **Status:** ✅ Fixed
 
-### Issue: Canvas Strokes Not Persisted
-**Problem:** Strokes disappear when navigating away
-**Solution:** Need to implement stroke serialization per patient
-**Status:** ⏳ Planned for next phase
+### Issue: Canvas Strokes Not Persisted (RESOLVED)
+**Problem:** ~~Strokes disappear when navigating away~~
+**Solution:** ✅ Implemented JSON serialization and auto-save for both dental chart and prescription canvases
+**Status:** ✅ Complete
+**Implementation:**
+- Database schema v4 with `dental_chart_strokes` column
+- Auto-save after each stroke, undo, or clear operation
+- Patient data reloaded on dashboard init to ensure fresh strokes
+- Strokes stored as JSON in SQLite per patient
 
 ---
 

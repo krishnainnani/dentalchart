@@ -5,11 +5,12 @@ A simple Flutter app for dentists to draw on a teeth SVG chart and export the fi
 
 ## Roadmap
 
-Phase 1 – Canvas correctness ✅  
-Phase 2 – Control (Undo / Clear) ✅  
-Phase 3 – PDF Export ✅  
-Phase 4 – UI / Design Polish ⏭  
-Phase 5 – Refactor & File Structure ⏭  
+Phase 1 – Canvas correctness ✅
+Phase 2 – Control (Undo / Clear) ✅
+Phase 3 – PDF Export ✅
+Phase 4 – Canvas Persistence ✅
+Phase 5 – UI / Design Polish ⏭
+Phase 6 – Refactor & File Structure ⏭  
 
                                                                 
 
@@ -38,9 +39,43 @@ Phase 5 – Refactor & File Structure ⏭
 - PDF uses square logical page (1000 × 1000)
 - SVG and strokes are correctly aligned in PDF
 - Stroke coordinates are correctly flipped for PDF coordinate system
+- Canvas persistence complete (dental chart + prescription)
+- Auto-save functionality for all drawing operations
 
+## Canvas Persistence (Phase 4 - COMPLETE)
 
+**Status:** ✅ Implemented
 
+Both dental chart and prescription canvases now persist strokes across sessions:
+
+### Features
+- Auto-save after each stroke, undo, or clear operation
+- Strokes stored as JSON in SQLite database per patient
+- Patient data automatically reloaded when opening clinical dashboard
+- Tab switching preserves strokes within session
+- Cross-session persistence (strokes survive app restart)
+
+### Technical Details
+- **Coordinate system:** 1000x1000 logical (resolution independent)
+- **Database schema:** v4 with `dental_chart_strokes` column
+- **Storage format:** JSON array of stroke objects
+- **Serialization:** Stroke.toJson() / Stroke.fromJson()
+- **Pattern:** Follows same implementation as prescription notes canvas
+
+### Implementation
+```dart
+// Stroke serialization
+Map<String, dynamic> toJson() {
+  return {
+    'points': points.map((p) => {'dx': p.dx, 'dy': p.dy}).toList(),
+    'color': color.toARGB32(),
+    'width': width,
+  };
+}
+
+// Storage in database per patient
+dentalChartStrokes: text().named('dental_chart_strokes')();
+```
 
 
 

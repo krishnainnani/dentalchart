@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 /// Model for a single stroke in the notes canvas
 class NoteStroke {
@@ -34,6 +36,9 @@ class NoteStroke {
 
 /// Handwritten notes canvas widget
 class NotesCanvas extends StatefulWidget {
+  // A4 proportions in points: 595 x 842
+  static const Size logicalSize = Size(595, 842);
+
   final String? initialNotes; // JSON string of strokes
   final Function(String) onNotesChanged; // Callback when notes change
   final VoidCallback? onToggleCollapse; // Optional callback to collapse section
@@ -83,22 +88,16 @@ class _NotesCanvasState extends State<NotesCanvas> {
     widget.onNotesChanged(jsonString);
   }
 
-  void _onPanStart(DragStartDetails details) {
-    setState(() {
-      currentStroke = NoteStroke(
-        points: [details.localPosition],
-        color: selectedColor,
-        width: strokeWidth,
-      );
-      strokes.add(currentStroke!);
-    });
+  // Convert screen coordinates to logical coordinates
+  Offset _screenToLogical(Offset screenPoint, Size screenSize) {
+    final scaleX = NotesCanvas.logicalSize.width / screenSize.width;
+    final scaleY = NotesCanvas.logicalSize.height / screenSize.height;
+    return Offset(
+      screenPoint.dx * scaleX,
+      screenPoint.dy * scaleY,
+    );
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
-    setState(() {
-      currentStroke?.points.add(details.localPosition);
-    });
-  }
 
   void _onPanEnd(DragEndDetails details) {
     if (currentStroke != null) {
@@ -152,10 +151,26 @@ class _NotesCanvasState extends State<NotesCanvas> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final screenSize = Size(constraints.maxWidth, constraints.maxHeight);
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onPanStart: _onPanStart,
-                onPanUpdate: _onPanUpdate,
+                onPanStart: (details) {
+                  final logicalPoint = _screenToLogical(details.localPosition, screenSize);
+                  setState(() {
+                    currentStroke = NoteStroke(
+                      points: [logicalPoint],
+                      color: selectedColor,
+                      width: strokeWidth,
+                    );
+                    strokes.add(currentStroke!);
+                  });
+                },
+                onPanUpdate: (details) {
+                  final logicalPoint = _screenToLogical(details.localPosition, screenSize);
+                  setState(() {
+                    currentStroke?.points.add(logicalPoint);
+                  });
+                },
                 onPanEnd: _onPanEnd,
                 child: Stack(
                   children: [
@@ -168,7 +183,7 @@ class _NotesCanvasState extends State<NotesCanvas> {
                     // Strokes
                     Positioned.fill(
                       child: CustomPaint(
-                        painter: NotesPainter(strokes: strokes),
+                        painter: NotesPainter(strokes: strokes, screenSize: screenSize),
                       ),
                     ),
                   ],
@@ -285,11 +300,19 @@ class PrescriptionBackgroundPainter extends CustomPainter {
 /// Custom painter for rendering note strokes only
 class NotesPainter extends CustomPainter {
   final List<NoteStroke> strokes;
+  final Size screenSize;
 
-  NotesPainter({required this.strokes});
+  NotesPainter({required this.strokes, required this.screenSize});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Convert logical to screen for display
+    Offset toScreen(Offset logical) {
+      final scaleX = screenSize.width / NotesCanvas.logicalSize.width;
+      final scaleY = screenSize.height / NotesCanvas.logicalSize.height;
+      return Offset(logical.dx * scaleX, logical.dy * scaleY);
+    }
+
     // Draw all strokes (including current stroke if being drawn)
     for (final stroke in strokes) {
       if (stroke.points.length < 2) continue;
@@ -302,7 +325,11 @@ class NotesPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
 
       for (int i = 0; i < stroke.points.length - 1; i++) {
-        canvas.drawLine(stroke.points[i], stroke.points[i + 1], paint);
+        canvas.drawLine(
+          toScreen(stroke.points[i]),
+          toScreen(stroke.points[i + 1]),
+          paint,
+        );
       }
     }
   }
@@ -311,4 +338,44 @@ class NotesPainter extends CustomPainter {
   bool shouldRepaint(NotesPainter oldDelegate) {
     return oldDelegate.strokes != strokes;
   }
+}
+
+/// Builds prescription background (header + ruled lines) for PDF export
+pw.Widget buildPrescriptionPdfBackground() {
+  return pw.CustomPaint(
+    size: const PdfPoint(595, 842), // A4 size
+    painter: (PdfGraphics canvas, PdfPoint size) {
+      const headerHeight = 80.0;
+      const lineSpacing = 30.0;
+      const leftMargin = 40.0;
+
+      // Draw separator line after header
+      canvas
+        ..setStrokeColor(PdfColors.grey300)
+        ..setLineWidth(1.0)
+        ..moveTo(0, size.y - headerHeight)
+        ..lineTo(size.x, size.y - headerHeight)
+        ..strokePath();
+
+      // Draw horizontal ruled lines
+      canvas
+        ..setStrokeColor(PdfColors.grey300)
+        ..setLineWidth(0.5);
+
+      for (double y = headerHeight + lineSpacing; y < size.y; y += lineSpacing) {
+        canvas
+          ..moveTo(0, size.y - y)
+          ..lineTo(size.x, size.y - y)
+          ..strokePath();
+      }
+
+      // Draw left margin line
+      canvas
+        ..setStrokeColor(PdfColors.red300)
+        ..setLineWidth(1.0)
+        ..moveTo(leftMargin, size.y - headerHeight)
+        ..lineTo(leftMargin, 0)
+        ..strokePath();
+    },
+  );
 }
